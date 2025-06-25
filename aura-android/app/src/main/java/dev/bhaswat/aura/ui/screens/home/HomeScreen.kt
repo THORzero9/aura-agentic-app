@@ -1,5 +1,6 @@
 package dev.bhaswat.aura.ui.screens.home
 
+import android.R.attr.enabled
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.bhaswat.aura.ui.theme.*
-import kotlin.time.Duration.Companion.hours
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +74,7 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = uiState.topic,
-                onValueChange = { },
+                onValueChange = homeViewModel::onTopicChange,
                 placeholder = { Text("e.g., Learn to code", color = SecondaryText) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -95,7 +95,7 @@ fun HomeScreen(
             }
             Slider(
                 value = uiState.hours,
-                onValueChange = { },
+                onValueChange = homeViewModel::onHoursChange,
                 valueRange = 1f..10f,
                 steps = 8,
                 colors = SliderDefaults.colors(
@@ -111,18 +111,18 @@ fun HomeScreen(
             Text("What's your learning style?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = PrimaryText)
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StyleChip(label = "Video tutorials", isSelected = uiState.selectedStyle == "Video tutorials", onSelected = { /* TODO: Call ViewModel function */ })
-                StyleChip(label = "Reading articles", isSelected = uiState.selectedStyle == "Reading articles", onSelected = { /* TODO: Call ViewModel function */ })
+                StyleChip(label = "Video tutorials", isSelected = uiState.selectedStyle == "Video tutorials", onSelected = { homeViewModel.onStyleChange("Video tutorials") })
+                StyleChip(label = "Reading articles", isSelected = uiState.selectedStyle == "Reading articles", onSelected = { homeViewModel.onStyleChange("Reading articles") })
             }
             Spacer(modifier = Modifier.height(8.dp))
-            StyleChip(label = "Interactive exercises", isSelected = uiState.selectedStyle == "Interactive exercises", onSelected = { /* TODO: Call ViewModel function */ })
+            StyleChip(label = "Interactive exercises", isSelected = uiState.selectedStyle == "Interactive exercises", onSelected = { homeViewModel.onStyleChange("Interactive exercises") })
 
 
             Spacer(modifier = Modifier.weight(1f)) // Pushes button to the bottom
 
             // -- Create My Plan Button --
             Button(
-                onClick = { /* TODO: Call ViewModel */ },
+                onClick = homeViewModel::onCreatePlanClick,
                 enabled = uiState.topic.isNotBlank(),
                 modifier = Modifier
                     .fillMaxWidth()
