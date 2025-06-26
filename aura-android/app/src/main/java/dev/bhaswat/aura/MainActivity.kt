@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import dev.bhaswat.aura.ui.AppNavigation
 import dev.bhaswat.aura.ui.screens.home.HomeScreen
 import dev.bhaswat.aura.ui.theme.AuraTheme
 
@@ -22,12 +23,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AuraTheme {
-                Surface (
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    HomeScreen()
-                }
+                AppNavigation()
             }
         }
     }

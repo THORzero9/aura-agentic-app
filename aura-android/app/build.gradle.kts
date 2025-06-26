@@ -58,10 +58,12 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.lottie.compose)
     // Retrofit for networking
     implementation(libs.retrofit)
     // Gson converter for JSON serialization
     implementation(libs.converter.gson)
+    implementation(libs.androidx.navigation.compose)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
