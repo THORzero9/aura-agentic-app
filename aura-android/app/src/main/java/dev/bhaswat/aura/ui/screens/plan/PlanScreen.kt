@@ -18,17 +18,27 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -36,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.bhaswat.aura.network.LearningModule
 import dev.bhaswat.aura.network.LearningPlanResponse
 import dev.bhaswat.aura.network.Resource
@@ -48,16 +59,45 @@ import dev.bhaswat.aura.ui.theme.PrimaryText
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlanScreen(
-    plan: LearningPlanResponse // The screen takes the generated plan as a parameter
+    plan: LearningPlanResponse, // The screen takes the generated plan as a parameter
+    planViewModel: PlanViewModel = viewModel()
 ) {
+    var isSaved by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Listen for save events from the ViewModel
+    LaunchedEffect(Unit) {
+        planViewModel.saveEvent.collect { message ->
+            snackbarHostState.showSnackbar(message)
+            // If the save was successful, update our saved state
+            if (message.contains("successfully")) {
+                isSaved = true
+            }
+        }
+    }
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(plan.planTitle, fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = AppBackground,
                     titleContentColor = PrimaryText
-                )
+                ),
+                actions = {
+                    // Make the save button disabled once it's saved
+                    IconButton(
+                        onClick = { planViewModel.onSaveClicked(plan) },
+                        enabled = !isSaved // Disable the button after saving
+                    ) {
+                        Icon(
+                            // Change the icon from a border to filled when saved
+                            imageVector = if (isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            contentDescription = "Save Plan",
+                            tint = if (isSaved) AccentBlue else PrimaryText
+                        )
+                    }
+                }
             )
         }
     ) { paddingValues ->
@@ -167,6 +207,6 @@ fun PlanScreenPreview() {
     )
 
     AuraTheme {
-        PlanScreen(plan = dummyPlan)
+
     }
 }

@@ -12,6 +12,7 @@ composeBom = "2025.06.01"
 lottieCompose = "6.6.7"
 materialIconsExtended = "1.7.8"
 navigationCompose = "2.9.0"
+sdkForAndroid = "8.1.0"
 
 
 [libraries]
@@ -36,6 +37,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "converterGson" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+sdk-for1-android = { module = "io.appwrite:sdk-for-android", version.ref = "sdkForAndroid" }
 
 
 [plugins]

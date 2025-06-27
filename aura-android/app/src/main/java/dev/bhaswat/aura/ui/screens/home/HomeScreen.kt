@@ -30,6 +30,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -60,37 +61,47 @@ import dev.bhaswat.aura.ui.theme.SliderTrack
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    // The viewModel is provided to the homeScreen
-    homeViewModel: HomeViewModel,
-    onNavigateToPlan: () -> Unit // This lambda will trigger navigation
+    // The ViewModel and SnackbarHostState are now correctly passed in
+    homeViewModel: HomeViewModel ,
+    snackbarHostState: SnackbarHostState ,
+    onNavigateToPlan: () -> Unit
 ) {
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
+    // We now correctly collect the error message
     val errorMessage by homeViewModel.errorState.collectAsStateWithLifecycle()
 
+    // This LaunchedEffect now correctly shows the Snackbar when an error occurs
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            homeViewModel.onErrorShown() // Notify the ViewModel
+        }
+    }
 
+    // This LaunchedEffect handles navigation (unchanged and correct)
     LaunchedEffect(Unit) {
         homeViewModel.navigationEvent.collect {
             onNavigateToPlan()
         }
     }
 
-
-    // Main background for the entire screen
+    // Main UI Box - no Scaffold here, which is correct
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppBackground)
-            .padding(16.dp),
+            .background(AppBackground),
         contentAlignment = Alignment.Center
     ) {
         // The main white card
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(16.dp)
                 .clip(RoundedCornerShape(20.dp))
                 .background(CardBackground)
                 .padding(24.dp)
         ) {
+            // ... (The entire UI layout inside the Column is the same as your correct version)
             // Top Bar: "Aura" and Help Icon
             Row(
                 modifier = Modifier.fillMaxWidth() ,
@@ -192,49 +203,44 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.weight(1f)) // Pushes button to the bottom
 
-            errorMessage?.let { message ->
-                Text(
-                    text = message,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
-
-            // -- Create My Plan Button --
+            // The Button is unchanged and correct
             Button(
-                onClick = homeViewModel::onCreatePlanClick ,
-                enabled = uiState.topic.isNotBlank() ,
+                onClick = homeViewModel::onCreatePlanClick,
+                enabled = uiState.topic.isNotBlank(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp) ,
-                shape = RoundedCornerShape(16.dp) ,
-                colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AccentBlue,
+                    disabledContainerColor = SliderTrack
+                )
             ) {
                 Text(
-                    text = "Create my plan" ,
-                    color = PrimaryText ,
-                    fontWeight = FontWeight.Bold ,
+                    text = "Create my plan",
+                    color = PrimaryText,
+                    fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
             }
         }
 
+        // The loading overlay is unchanged and correct
         AnimatedVisibility(
-            visible = uiState.isLoading ,
-            enter = fadeIn() ,
+            visible = uiState.isLoading,
+            enter = fadeIn(),
             exit = fadeOut()
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f)) ,
+                    .background(Color.Black.copy(alpha = 0.5f)),
                 contentAlignment = Alignment.Center
             ) {
                 val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ai_loader))
                 LottieAnimation(
                     composition = composition,
-                    iterations = LottieConstants.IterateForever, // Loop the animation
+                    iterations = LottieConstants.IterateForever,
                     modifier = Modifier.size(200.dp)
                 )
             }
@@ -272,7 +278,8 @@ fun StyleChip(label: String, isSelected: Boolean, onSelected: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
-    AuraTheme {
-
+    AuraTheme {Surface(modifier = Modifier.fillMaxSize()) {
+        Text(text = "HomeScreen Preview")
+    }
     }
 }

@@ -1,6 +1,7 @@
 package dev.bhaswat.aura.ui.screens.home
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import dev.bhaswat.aura.data.PlanRepository
 import dev.bhaswat.aura.network.LearningRequest
@@ -13,9 +14,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class HomeViewModel(private val sharedViewModel: SharedViewModel) : ViewModel() {
-    private val _uiState = MutableStateFlow(HomeUiState())
+class HomeViewModel(
+    application: Application , // It now receives the application context
+    private val sharedViewModel: SharedViewModel
+) : AndroidViewModel(application) { // It now extends AndroidViewModel
 
+    private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     private val _navigationEvent = MutableSharedFlow<Unit>()
@@ -24,31 +28,23 @@ class HomeViewModel(private val sharedViewModel: SharedViewModel) : ViewModel() 
     private val _errorState = MutableStateFlow<String?>(null)
     val errorState: StateFlow<String?> = _errorState.asStateFlow()
 
-    private val planRepository = PlanRepository()
+    // 2. UPDATE THE REPOSITORY INSTANTIATION
+    // We now have the context to pass to the repository
+    private val planRepository = PlanRepository(application.applicationContext)
 
-    //called when the user types in the topic text field
 
+    // The rest of the functions (onTopicChange, onCreatePlanClick, etc.)
+    // are exactly the same. No changes needed there.
     fun onTopicChange(newTopic: String) {
-        _uiState.update {
-            it.copy(topic = newTopic)
-        }
-
+        _uiState.update { it.copy(topic = newTopic) }
     }
-
-    //called when the user moves the slider to a new value
 
     fun onHoursChange(newHours: Float) {
-        _uiState.update {
-            it.copy(hours = newHours)
-        }
+        _uiState.update { it.copy(hours = newHours) }
     }
 
-    //called when the user selects a learning style chip
-
     fun onStyleChange(newStyle: String) {
-        _uiState.update {
-            it.copy(selectedStyle = newStyle)
-        }
+        _uiState.update { it.copy(selectedStyle = newStyle) }
     }
 
     //Called when the main "Create my plan" button is clicked.
@@ -75,14 +71,15 @@ class HomeViewModel(private val sharedViewModel: SharedViewModel) : ViewModel() 
                 sharedViewModel.setPlan(plan)
                 _navigationEvent.emit(Unit)
             } else {
-                // UPDATE THIS PART: Instead of just printing, post an error message.
+                // Instead of just printing, we now post an error message
                 _errorState.value = "Failed to generate plan. Please try again."
             }
             _uiState.update { it.copy(isLoading = false) }
         }
     }
+
+    // ADD THIS FUNCTION to allow the UI to clear the error message after showing it
     fun onErrorShown() {
         _errorState.value = null
     }
 }
-
