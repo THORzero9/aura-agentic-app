@@ -19,6 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import dev.bhaswat.aura.ui.screens.auth.AuthUiState
 import dev.bhaswat.aura.ui.screens.auth.AuthViewModel
 import dev.bhaswat.aura.ui.screens.auth.LoginScreen
+import dev.bhaswat.aura.ui.screens.auth.SignUpScreen
 import dev.bhaswat.aura.ui.screens.home.HomeScreen
 import dev.bhaswat.aura.ui.screens.home.HomeViewModel
 import dev.bhaswat.aura.ui.screens.home.HomeViewModelFactory
@@ -26,6 +27,8 @@ import dev.bhaswat.aura.ui.screens.plan.PlanScreen
 
 object Routes {
     const val LOGIN_SCREEN = "login"
+
+    const val SIGNUP_SCREEN = "signup"
     const val HOME_SCREEN = "home"
     const val PLAN_SCREEN = "plan"
 }
@@ -64,9 +67,28 @@ fun AppNavigation() {
                         navController.navigate(Routes.HOME_SCREEN) {
                             popUpTo(Routes.LOGIN_SCREEN) { inclusive = true }
                         }
+                    },
+                    onNavigateToSignUp = {
+                        navController.navigate(Routes.SIGNUP_SCREEN)
                     }
                 )
             }
+            // THIS IS THE NEW ROUTE WE ARE ADDING
+            composable(Routes.SIGNUP_SCREEN) {
+                SignUpScreen(
+                    authViewModel = authViewModel,
+                    onSignUpSuccess = {
+                        navController.navigate(Routes.HOME_SCREEN) {
+                            popUpTo(Routes.LOGIN_SCREEN) { inclusive = true }
+                        }
+                    },
+                    // This allows the user to go back to the login screen
+                    onNavigateToLogin = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
             composable(Routes.HOME_SCREEN) {
                 val application = LocalContext.current.applicationContext as Application
                 val homeViewModel: HomeViewModel = viewModel(

@@ -31,8 +31,17 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun signUp(email: String, pass: String) {
+    fun signUp(email: String, pass: String, confirmPass: String) {
         viewModelScope.launch {
+            if (pass != confirmPass) {
+                _uiState.update { AuthUiState.Error("Passwords do not match.") }
+                return@launch
+            }
+            if (pass.length < 8) {
+                _uiState.update { AuthUiState.Error("Password must be at least 8 characters long.") }
+                return@launch
+            }
+
             _uiState.update { AuthUiState.Loading }
             val user = authRepository.createUser(email, pass)
             if (user != null) {

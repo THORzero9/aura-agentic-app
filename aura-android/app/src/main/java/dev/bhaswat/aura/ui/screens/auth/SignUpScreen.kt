@@ -1,11 +1,8 @@
 package dev.bhaswat.aura.ui.screens.auth
 
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,11 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -35,27 +29,21 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.bhaswat.aura.ui.theme.PrimaryText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(
-    authViewModel: AuthViewModel = viewModel(),
-    onLoginSuccess: () -> Unit,
-    onNavigateToSignUp: () -> Unit
+fun SignUpScreen(
+    authViewModel: AuthViewModel,
+    onSignUpSuccess: () -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
     val uiState by authViewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalActivity.current
-
-    LaunchedEffect(Unit) {
-        authViewModel.checkCurrentUser()
-    }
 
     // This effect listens for the Success state and navigates when it occurs
     LaunchedEffect(uiState) {
         if (uiState is AuthUiState.Success) {
-            onLoginSuccess()
+            onSignUpSuccess()
         }
     }
 
@@ -68,13 +56,13 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Welcome to Aura",
+                text = "Create Your Account",
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryText
             )
             Text(
-                text = "Your personal AI learning guide",
+                text = "Join Aura to start your learning journey",
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 8.dp)
@@ -84,8 +72,8 @@ fun LoginScreen(
 
             var email by remember { mutableStateOf("") }
             var password by remember { mutableStateOf("") }
+            var confirmPassword by remember { mutableStateOf("") }
 
-            // Email Field
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -93,14 +81,20 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             )
-
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Password Field
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password") },
+                label = { Text("Password (min. 8 characters)") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                visualTransformation = PasswordVisualTransformation()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                label = { Text("Confirm Password") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 visualTransformation = PasswordVisualTransformation()
@@ -117,47 +111,22 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Login Button
+            // Sign Up Button
             Button(
-                onClick = { authViewModel.login(email, password) },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
+                onClick = { authViewModel.signUp(email, password, confirmPassword) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Login")
+                Text("Sign Up")
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Sign Up Button
-            TextButton(onClick = onNavigateToSignUp) {
-                Text("Don't have an account? Sign Up")
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f) ,
-                    thickness = DividerDefaults.Thickness ,
-                    color = DividerDefaults.color
-                )
-                Text(" OR ", modifier = Modifier.padding(horizontal = 8.dp))
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f) ,
-                    thickness = DividerDefaults.Thickness ,
-                    color = DividerDefaults.color
-                )
-            }
-            Spacer(modifier = Modifier.height(24.dp))
-            OutlinedButton(
-                onClick = { authViewModel.signInWithGoogle(context as ComponentActivity) },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Sign in with Google", color = PrimaryText)
+            // Login Button
+            TextButton(onClick = onNavigateToLogin) {
+                Text("Already have an account? Login")
             }
         }
 
