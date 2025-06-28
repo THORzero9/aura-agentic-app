@@ -5,4 +5,5 @@ sealed interface AuthUiState {
     data object Loading : AuthUiState
     data object Success : AuthUiState
     data class Error(val message: String) : AuthUiState
+    data object SignUpSuccessPendingVerification : AuthUiState
 }

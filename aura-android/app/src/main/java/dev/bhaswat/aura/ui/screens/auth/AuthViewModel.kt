@@ -43,12 +43,29 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             _uiState.update { AuthUiState.Loading }
-            val user = authRepository.createUser(email, pass)
-            if (user != null) {
-                // If sign up is successful, try to log them in immediately
-                login(email, pass)
+            val createdUser = authRepository.createUser(email, pass)
+
+            if (createdUser != null) {
+                // Step 2 (The Fix): LOG IN the new user immediately to create a session.
+                val session = authRepository.createSession(email, pass)
+
+                if (session != null) {
+                    // Step 3: NOW that we have a session, send the verification email.
+                    val verificationSent = authRepository.requestEmailVerification()
+                    if (verificationSent) {
+                        // Go to the screen that says "Please verify your email".
+                        _uiState.update { AuthUiState.SignUpSuccessPendingVerification }
+                    } else {
+                        // This error is unlikely but good to have.
+                        _uiState.update { AuthUiState.Error("Account created, but failed to send verification email.") }
+                    }
+                } else {
+                    // This error means the account was created but the immediate login failed.
+                    _uiState.update { AuthUiState.Error("Account created, but failed to log in.") }
+                }
             } else {
-                _uiState.update { AuthUiState.Error("Sign up failed. Please try again.") }
+                // This error usually means the user's email already exists.
+                _uiState.update { AuthUiState.Error("Sign up failed. User may already exist.") }
             }
         }
     }
@@ -73,6 +90,18 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.update { AuthUiState.Success }
             } else {
                 _uiState.update { AuthUiState.Error("Google Sign-In failed.") }
+            }
+        }
+    }
+    fun resendVerificationEmail() {
+        viewModelScope.launch {
+            _uiState.update { AuthUiState.Loading } // Show loading while resending
+            val success = authRepository.resendEmailVerification()
+            if (success) {
+                _uiState.update { AuthUiState.SignUpSuccessPendingVerification } // Stay on the same screen, maybe show a success toast in UI
+                // You might want a different state or a SharedFlow for "resend success" message
+            } else {
+                _uiState.update { AuthUiState.Error("Failed to resend verification email. Please try again.") }
             }
         }
     }

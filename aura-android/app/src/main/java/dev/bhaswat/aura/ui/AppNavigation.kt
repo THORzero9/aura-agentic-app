@@ -20,6 +20,7 @@ import dev.bhaswat.aura.ui.screens.auth.AuthUiState
 import dev.bhaswat.aura.ui.screens.auth.AuthViewModel
 import dev.bhaswat.aura.ui.screens.auth.LoginScreen
 import dev.bhaswat.aura.ui.screens.auth.SignUpScreen
+import dev.bhaswat.aura.ui.screens.auth.VerificationPendingScreen
 import dev.bhaswat.aura.ui.screens.home.HomeScreen
 import dev.bhaswat.aura.ui.screens.home.HomeViewModel
 import dev.bhaswat.aura.ui.screens.home.HomeViewModelFactory
@@ -31,6 +32,8 @@ object Routes {
     const val SIGNUP_SCREEN = "signup"
     const val HOME_SCREEN = "home"
     const val PLAN_SCREEN = "plan"
+
+    const val SIGNUP_SUCCESS_SCREEN = "signup_success"
 }
 
 @Composable
@@ -53,7 +56,12 @@ fun AppNavigation() {
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { innerPadding ->
 
-        val startDestination = if (authState is AuthUiState.Success) Routes.HOME_SCREEN else Routes.LOGIN_SCREEN
+        //val startDestination = if (authState is AuthUiState.Success) Routes.HOME_SCREEN else Routes.LOGIN_SCREEN
+        val startDestination = when (authState) {
+            is AuthUiState.Success -> Routes.HOME_SCREEN
+            is AuthUiState.SignUpSuccessPendingVerification -> Routes.SIGNUP_SUCCESS_SCREEN // Navigate to pending verification screen
+            else -> Routes.LOGIN_SCREEN
+        }
 
         NavHost(
             navController = navController,
@@ -78,7 +86,7 @@ fun AppNavigation() {
                 SignUpScreen(
                     authViewModel = authViewModel,
                     onSignUpSuccess = {
-                        navController.navigate(Routes.HOME_SCREEN) {
+                        navController.navigate(Routes.SIGNUP_SUCCESS_SCREEN) {
                             popUpTo(Routes.LOGIN_SCREEN) { inclusive = true }
                         }
                     },
@@ -88,6 +96,17 @@ fun AppNavigation() {
                     }
                 )
             }
+            composable(Routes.SIGNUP_SUCCESS_SCREEN) {
+                VerificationPendingScreen(
+                    authViewModel = authViewModel, // Pass AuthViewModel
+                    onNavigateToLogin = {
+                        navController.navigate(Routes.LOGIN_SCREEN) {
+                            popUpTo(Routes.SIGNUP_SUCCESS_SCREEN) { inclusive = true } // Clear back stack up to this screen
+                        }
+                    }
+                )
+            }
+
 
             composable(Routes.HOME_SCREEN) {
                 val application = LocalContext.current.applicationContext as Application
