@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.bhaswat.aura.network.LearningModule
 import dev.bhaswat.aura.network.LearningPlanResponse
@@ -62,17 +64,13 @@ fun PlanScreen(
     plan: LearningPlanResponse, // The screen takes the generated plan as a parameter
     planViewModel: PlanViewModel = viewModel()
 ) {
-    var isSaved by remember { mutableStateOf(false) }
+    // Collect the entire UI state object
+    val uiState by planViewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Listen for save events from the ViewModel
     LaunchedEffect(Unit) {
         planViewModel.saveEvent.collect { message ->
             snackbarHostState.showSnackbar(message)
-            // If the save was successful, update our saved state
-            if (message.contains("successfully")) {
-                isSaved = true
-            }
         }
     }
     Scaffold(
@@ -88,14 +86,21 @@ fun PlanScreen(
                     // Make the save button disabled once it's saved
                     IconButton(
                         onClick = { planViewModel.onSaveClicked(plan) },
-                        enabled = !isSaved // Disable the button after saving
+                        enabled = !uiState.isSaving && !uiState.isSaved
                     ) {
-                        Icon(
-                            // Change the icon from a border to filled when saved
-                            imageVector = if (isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                            contentDescription = "Save Plan",
-                            tint = if (isSaved) AccentBlue else PrimaryText
-                        )
+                        if (uiState.isSaving) {
+                            // Show a small spinner inside the button while saving
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = AccentBlue
+                            )
+                        } else {
+                            Icon(
+                                imageVector = if (uiState.isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                contentDescription = "Save Plan",
+                                tint = if (uiState.isSaved) AccentBlue else PrimaryText
+                            )
+                        }
                     }
                 }
             )
@@ -184,7 +189,7 @@ fun ResourceItem(resource: Resource) {
 @Composable
 fun PlanScreenPreview() {
     // Create a dummy plan for the preview
-    val dummyPlan = LearningPlanResponse(
+    LearningPlanResponse(
         planTitle = "Your Custom Plan for Jetpack Compose" ,
         modules = listOf(
             LearningModule(

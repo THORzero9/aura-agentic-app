@@ -1,0 +1,4 @@
+pydantic
+google-generativeai
+tavily-python
+appwrite

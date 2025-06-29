@@ -20,11 +20,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.material.icons.filled.Bookmarks
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -33,9 +37,13 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,11 +72,15 @@ fun HomeScreen(
     // The ViewModel and SnackbarHostState are now correctly passed in
     homeViewModel: HomeViewModel ,
     snackbarHostState: SnackbarHostState ,
-    onNavigateToPlan: () -> Unit
+    onNavigateToPlan: () -> Unit,
+    onNavigateToSavedPlans: () -> Unit,
+    onLogout: () -> Unit
 ) {
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     // We now correctly collect the error message
     val errorMessage by homeViewModel.errorState.collectAsStateWithLifecycle()
+
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     // This LaunchedEffect now correctly shows the Snackbar when an error occurs
     LaunchedEffect(errorMessage) {
@@ -84,6 +96,30 @@ fun HomeScreen(
             onNavigateToPlan()
         }
     }
+        if (showLogoutDialog) {
+            AlertDialog(
+                onDismissRequest = { showLogoutDialog = false } ,
+                title = { Text("Confirm Logout") } ,
+                text = { Text("Are you sure you want to log out?") } ,
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showLogoutDialog = false
+                            onLogout() // Call the navigation callback to perform logout
+                        }
+                    ) {
+                        Text("Logout")
+                    }
+                } ,
+                dismissButton = {
+                    TextButton(onClick = { showLogoutDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
+
 
     // Main UI Box - no Scaffold here, which is correct
     Box(
@@ -105,9 +141,10 @@ fun HomeScreen(
             // Top Bar: "Aura" and Help Icon
             Row(
                 modifier = Modifier.fillMaxWidth() ,
-                horizontalArrangement = Arrangement.Center ,
+                horizontalArrangement = Arrangement.End ,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
                 Text(
                     text = "Aura" ,
                     style = MaterialTheme.typography.titleMedium ,
@@ -115,6 +152,20 @@ fun HomeScreen(
                     color = PrimaryText ,
                     modifier = Modifier.weight(1f).wrapContentWidth(Alignment.CenterHorizontally)
                 )
+                IconButton(onClick = onNavigateToSavedPlans) {
+                    Icon(
+                        imageVector = Icons.Default.Bookmarks, // The new icon
+                        contentDescription = "Saved Plans",
+                        tint = PrimaryText
+                    )
+                }
+                IconButton(onClick = { showLogoutDialog = true}) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                        contentDescription = "Logout",
+                        tint = PrimaryText
+                    )
+                }
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.HelpOutline ,
                     contentDescription = "Help" ,

@@ -19,21 +19,24 @@ import androidx.navigation.compose.rememberNavController
 import dev.bhaswat.aura.ui.screens.auth.AuthUiState
 import dev.bhaswat.aura.ui.screens.auth.AuthViewModel
 import dev.bhaswat.aura.ui.screens.auth.LoginScreen
+import dev.bhaswat.aura.ui.screens.auth.OtpScreen
 import dev.bhaswat.aura.ui.screens.auth.SignUpScreen
-import dev.bhaswat.aura.ui.screens.auth.VerificationPendingScreen
 import dev.bhaswat.aura.ui.screens.home.HomeScreen
 import dev.bhaswat.aura.ui.screens.home.HomeViewModel
 import dev.bhaswat.aura.ui.screens.home.HomeViewModelFactory
 import dev.bhaswat.aura.ui.screens.plan.PlanScreen
+import dev.bhaswat.aura.ui.screens.saved.SavedPlansScreen
 
 object Routes {
     const val LOGIN_SCREEN = "login"
 
     const val SIGNUP_SCREEN = "signup"
+
+    const val OTP_SCREEN = "otp"
     const val HOME_SCREEN = "home"
     const val PLAN_SCREEN = "plan"
 
-    const val SIGNUP_SUCCESS_SCREEN = "signup_success"
+    const val SAVED_PLANS_SCREEN = "saved_plans"
 }
 
 @Composable
@@ -59,23 +62,24 @@ fun AppNavigation() {
         //val startDestination = if (authState is AuthUiState.Success) Routes.HOME_SCREEN else Routes.LOGIN_SCREEN
         val startDestination = when (authState) {
             is AuthUiState.Success -> Routes.HOME_SCREEN
-            is AuthUiState.SignUpSuccessPendingVerification -> Routes.SIGNUP_SUCCESS_SCREEN // Navigate to pending verification screen
+            // The new state we added for the OTP flow
+            is AuthUiState.NeedsOtpVerification -> Routes.OTP_SCREEN
             else -> Routes.LOGIN_SCREEN
         }
 
         NavHost(
-            navController = navController,
-            startDestination = startDestination,
+            navController = navController ,
+            startDestination = startDestination ,
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Routes.LOGIN_SCREEN) {
                 LoginScreen(
-                    authViewModel = authViewModel,
+                    authViewModel = authViewModel ,
                     onLoginSuccess = {
                         navController.navigate(Routes.HOME_SCREEN) {
                             popUpTo(Routes.LOGIN_SCREEN) { inclusive = true }
                         }
-                    },
+                    } ,
                     onNavigateToSignUp = {
                         navController.navigate(Routes.SIGNUP_SCREEN)
                     }
@@ -84,24 +88,25 @@ fun AppNavigation() {
             // THIS IS THE NEW ROUTE WE ARE ADDING
             composable(Routes.SIGNUP_SCREEN) {
                 SignUpScreen(
-                    authViewModel = authViewModel,
+                    authViewModel = authViewModel ,
                     onSignUpSuccess = {
-                        navController.navigate(Routes.SIGNUP_SUCCESS_SCREEN) {
-                            popUpTo(Routes.LOGIN_SCREEN) { inclusive = true }
+                        navController.navigate(Routes.OTP_SCREEN) {
                         }
-                    },
+                    } ,
                     // This allows the user to go back to the login screen
                     onNavigateToLogin = {
                         navController.popBackStack()
                     }
                 )
             }
-            composable(Routes.SIGNUP_SUCCESS_SCREEN) {
-                VerificationPendingScreen(
-                    authViewModel = authViewModel, // Pass AuthViewModel
-                    onNavigateToLogin = {
-                        navController.navigate(Routes.LOGIN_SCREEN) {
-                            popUpTo(Routes.SIGNUP_SUCCESS_SCREEN) { inclusive = true } // Clear back stack up to this screen
+            composable(Routes.OTP_SCREEN) {
+                OtpScreen(
+                    authViewModel = authViewModel ,
+                    onVerificationSuccess = {
+                        // When the user clicks "Go to Login", we clear the auth flow
+                        // and go back to a clean login screen.
+                        navController.navigate(Routes.HOME_SCREEN) {
+                            popUpTo(Routes.LOGIN_SCREEN) { inclusive = true }
                         }
                     }
                 )
@@ -111,15 +116,24 @@ fun AppNavigation() {
             composable(Routes.HOME_SCREEN) {
                 val application = LocalContext.current.applicationContext as Application
                 val homeViewModel: HomeViewModel = viewModel(
-                    factory = HomeViewModelFactory(application, sharedViewModel)
+                    factory = HomeViewModelFactory(application , sharedViewModel)
                 )
 
                 // THIS IS THE FIX: We now correctly pass the snackbarHostState
                 HomeScreen(
-                    homeViewModel = homeViewModel,
-                    snackbarHostState = snackbarHostState,
+                    homeViewModel = homeViewModel ,
+                    snackbarHostState = snackbarHostState ,
                     onNavigateToPlan = {
                         navController.navigate(Routes.PLAN_SCREEN)
+                    } ,
+                    onNavigateToSavedPlans = {
+                        navController.navigate(Routes.SAVED_PLANS_SCREEN)
+                    } ,
+                    onLogout = {
+                        authViewModel.logout()
+                        navController.navigate(Routes.LOGIN_SCREEN) {
+                            popUpTo(Routes.HOME_SCREEN) { inclusive = true }
+                        }
                     }
                 )
             }
@@ -128,6 +142,19 @@ fun AppNavigation() {
                 plan?.let {
                     PlanScreen(plan = it)
                 }
+            }
+            composable(Routes.SAVED_PLANS_SCREEN) {
+                SavedPlansScreen(
+                    onPlanClicked = { plan ->
+                        // When a saved plan is clicked, put it in the SharedViewModel
+                        sharedViewModel.setPlan(plan)
+                        // Then navigate to the regular PlanScreen to view it
+                        navController.navigate(Routes.PLAN_SCREEN)
+                    } ,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
             }
         }
     }

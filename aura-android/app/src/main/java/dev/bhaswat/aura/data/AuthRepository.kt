@@ -3,8 +3,9 @@ package dev.bhaswat.aura.data
 import android.content.Context
 import androidx.activity.ComponentActivity
 import dev.bhaswat.aura.network.AppwriteClient
+import io.appwrite.ID
 import io.appwrite.enums.OAuthProvider
-import io.appwrite.exceptions.AppwriteException
+import io.appwrite.models.Token
 import io.appwrite.models.User
 import io.appwrite.services.Account
 
@@ -12,12 +13,16 @@ class AuthRepository(context: Context) {
 
     private val account = Account(AppwriteClient.getInstance(context))
 
-    suspend fun createUser(email: String, pass: String): User<Map<String , Any>>? {
+    /**
+     * Creates a new user account with a name, email, and password.
+     */
+    suspend fun createUser(name: String, email: String, pass: String): User<Map<String, Any>>? {
         return try {
             account.create(
-                userId = io.appwrite.ID.unique(),
+                userId = ID.unique(),
                 email = email,
-                password = pass
+                password = pass,
+                name = name
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -25,7 +30,34 @@ class AuthRepository(context: Context) {
         }
     }
 
-    suspend fun createSession(email: String, pass: String): User<Map<String , Any>>? {
+    // UPDATED: This is the correct function to REQUEST the OTP email.
+    // It now returns the Token object from Appwrite.
+    suspend fun requestOtp(email: String): Token? {
+        return try {
+            account.createEmailToken(userId = ID.unique(), email = email)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    // NEW: This function verifies the OTP and creates a session (logs the user in).
+    suspend fun verifyOtpAndLogin(userId: String, otp: String): User<Map<String, Any>>? {
+        return try {
+            // The 'secret' for this function is the OTP code from the email.
+            account.createSession(userId = userId, secret = otp)
+            // After creating the session, get the user details to confirm success.
+            account.get()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    /**
+     * Standard login for an existing user with their password.
+     */
+    suspend fun loginWithPassword(email: String, pass: String): User<Map<String, Any>>? {
         return try {
             account.createEmailPasswordSession(email, pass)
             account.get()
@@ -35,6 +67,9 @@ class AuthRepository(context: Context) {
         }
     }
 
+    /**
+     * Handles the Google Sign-In OAuth flow.
+     */
     suspend fun signInWithGoogle(activity: ComponentActivity): User<Map<String, Any>>? {
         return try {
             account.createOAuth2Session(
@@ -48,78 +83,22 @@ class AuthRepository(context: Context) {
         }
     }
 
+    /**
+     * Checks if there is a currently active session.
+     */
     suspend fun getCurrentUser(): User<Map<String, Any>>? {
         return try {
             account.get()
         } catch (e: Exception) {
-            // If there's no active session, Appwrite throws an exception.
-            // We catch it and return null.
             null
         }
     }
-
-    suspend fun requestEmailVerification(): Boolean {
-        return try {
-            // The URL here must match the data scheme in your AndroidManifest.xml
-            // for the CallbackActivity (appwrite-callback-aura-agentic-app)
-            val url = "https://bhaswat.social/verify"
-            account.createVerification(url = url)
-            true
+    suspend fun logout() {
+        try {
+            // Tells Appwrite to delete the session for the currently logged-in user.
+            account.deleteSession("current")
         } catch (e: Exception) {
             e.printStackTrace()
-            false
-        }
-    }
-
-    suspend fun resendEmailVerification(): Boolean {
-        return try {
-            // This function is often called after a user explicitly requests a resend
-            // It relies on the current session.
-            val url = "https://bhaswat.social/verify"
-            account.createVerification(url = url)
-            true
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
-        }
-    }
-    suspend fun confirmVerification(userId: String, secret: String): Boolean {
-        return try {
-            // This is the final confirmation step that tells Appwrite the user
-            // has successfully clicked the link.
-            account.updateVerification(userId = userId, secret = secret)
-            true // Return true if the API call succeeds
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false // Return false if an error occurs
-        }
-    }
-
-
-    // MODIFIED: Function to create a user, immediately create a session, and verify session status
-    suspend fun createUserWithDetails(email: String, pass: String): Pair<User<Map<String, Any>>?, String?> {
-        return try {
-            val createdUser = account.create(
-                userId = io.appwrite.ID.unique(),
-                email = email,
-                password = pass
-            )
-
-            // Attempt to create a session for the newly created user
-            account.createEmailPasswordSession(email, pass)
-
-            // NEW: Explicitly get the current user to confirm session is active and has 'account' scope
-            val currentUser = account.get()
-
-            Pair(currentUser, null) // Successful creation and session established
-
-        } catch (e: AppwriteException) {
-            e.printStackTrace()
-            // Return null user and the specific error message from Appwrite
-            Pair(null, e.message)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Pair(null, "An unexpected error occurred during user creation or session login.")
         }
     }
 }

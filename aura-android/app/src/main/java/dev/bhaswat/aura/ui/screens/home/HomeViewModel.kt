@@ -3,6 +3,7 @@ package dev.bhaswat.aura.ui.screens.home
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import dev.bhaswat.aura.data.AuthRepository
 import dev.bhaswat.aura.data.PlanRepository
 import dev.bhaswat.aura.network.LearningRequest
 import dev.bhaswat.aura.ui.SharedViewModel
@@ -48,7 +49,7 @@ class HomeViewModel(
     }
 
     //Called when the main "Create my plan" button is clicked.
-
+    private val authRepository = AuthRepository(getApplication())
     fun onCreatePlanClick() {
         // Use viewModelScope to launch a coroutine. This is the safe, standard
         // way to do background work in a ViewModel.
@@ -57,11 +58,19 @@ class HomeViewModel(
             _uiState.update {
                 it.copy(isLoading = true)
             }
+            val currentUser = authRepository.getCurrentUser()
+            if (currentUser == null) {
+                // If there's no user, show an error and stop.
+                _errorState.value = "Error: You must be logged in to create a plan."
+                _uiState.update { it.copy(isLoading = false) }
+                return@launch
+            }
             // Create the request object from the current UI state
             val request = LearningRequest(
                 topic = uiState.value.topic ,
                 hoursPerWeek = uiState.value.hours.toInt() ,
-                preferredFormat = uiState.value.selectedStyle
+                preferredFormat = uiState.value.selectedStyle ,
+                userId = currentUser.id
             )
 
             val plan = planRepository.generateLearningPlan(request)
@@ -69,12 +78,14 @@ class HomeViewModel(
             // 4. Handle the response
             if (plan != null) {
                 sharedViewModel.setPlan(plan)
+                _uiState.update { it.copy(isLoading = false) }
+
                 _navigationEvent.emit(Unit)
             } else {
                 // Instead of just printing, we now post an error message
                 _errorState.value = "Failed to generate plan. Please try again."
+                _uiState.update { it.copy(isLoading = false) }
             }
-            _uiState.update { it.copy(isLoading = false) }
         }
     }
 

@@ -17,6 +17,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState = _uiState.asStateFlow()
 
+    // We need to temporarily store the user's email between the sign-up and OTP screens.
+    private var emailForVerification: String? = null
+    private var userIdForVerification: String? = null
     fun checkCurrentUser() {
         viewModelScope.launch {
             _uiState.update { AuthUiState.Loading }
@@ -31,7 +34,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun signUp(email: String, pass: String, confirmPass: String) {
+    fun signUp(name: String, email: String, pass: String, confirmPass: String) {
         viewModelScope.launch {
             if (pass != confirmPass) {
                 _uiState.update { AuthUiState.Error("Passwords do not match.") }
@@ -41,39 +44,58 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.update { AuthUiState.Error("Password must be at least 8 characters long.") }
                 return@launch
             }
+            if (name.isBlank()) {
+                _uiState.update { AuthUiState.Error("Name cannot be empty.") }
+                return@launch
+            }
 
             _uiState.update { AuthUiState.Loading }
-            val createdUser = authRepository.createUser(email, pass)
+            val createdUser = authRepository.createUser(name, email, pass)
 
             if (createdUser != null) {
-                // Step 2 (The Fix): LOG IN the new user immediately to create a session.
-                val session = authRepository.createSession(email, pass)
+                // --- THIS IS THE CORRECTED LOGIC ---
+                // 1. We call the repository and save the result to a variable named 'token'
+                val token = authRepository.requestOtp(email)
 
-                if (session != null) {
-                    // Step 3: NOW that we have a session, send the verification email.
-                    val verificationSent = authRepository.requestEmailVerification()
-                    if (verificationSent) {
-                        // Go to the screen that says "Please verify your email".
-                        _uiState.update { AuthUiState.SignUpSuccessPendingVerification }
-                    } else {
-                        // This error is unlikely but good to have.
-                        _uiState.update { AuthUiState.Error("Account created, but failed to send verification email.") }
-                    }
+                // 2. We now correctly check if the 'token' is not null
+                if (token != null) {
+                    // 3. We get the userId from the token and store it
+                    userIdForVerification = token.userId
+                    emailForVerification = email // Also store the email
+                    _uiState.update { AuthUiState.NeedsOtpVerification }
                 } else {
-                    // This error means the account was created but the immediate login failed.
-                    _uiState.update { AuthUiState.Error("Account created, but failed to log in.") }
+                    _uiState.update { AuthUiState.Error("Account created, but failed to send OTP.") }
                 }
             } else {
-                // This error usually means the user's email already exists.
                 _uiState.update { AuthUiState.Error("Sign up failed. User may already exist.") }
             }
         }
     }
+    fun verifyOtpAndLogin(otp: String) {
+        viewModelScope.launch {
+            val userId = userIdForVerification
+            if (userId == null) {
+                _uiState.update { AuthUiState.Error("Something went wrong. Please try signing up again.") }
+                return@launch
+            }
+
+            _uiState.update { AuthUiState.Loading }
+
+            // Use the stored user ID and the user-provided OTP to log in.
+            val user = authRepository.verifyOtpAndLogin(userId, otp)
+            if (user != null) {
+                _uiState.update { AuthUiState.Success }
+            } else {
+                _uiState.update { AuthUiState.Error("Invalid OTP. Please try again.") }
+            }
+        }
+    }
+
 
     fun login(email: String, pass: String) {
         viewModelScope.launch {
             _uiState.update { AuthUiState.Loading }
-            val user = authRepository.createSession(email, pass)
+            val user = authRepository.loginWithPassword(email, pass)
             if (user != null) {
                 _uiState.update { AuthUiState.Success }
             } else {
@@ -93,16 +115,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-    fun resendVerificationEmail() {
+
+    fun logout() {
         viewModelScope.launch {
-            _uiState.update { AuthUiState.Loading } // Show loading while resending
-            val success = authRepository.resendEmailVerification()
-            if (success) {
-                _uiState.update { AuthUiState.SignUpSuccessPendingVerification } // Stay on the same screen, maybe show a success toast in UI
-                // You might want a different state or a SharedFlow for "resend success" message
-            } else {
-                _uiState.update { AuthUiState.Error("Failed to resend verification email. Please try again.") }
-            }
+            authRepository.logout()
+            // After logging out, reset the state to Idle to show the login screen.
+            _uiState.update { AuthUiState.Idle }
         }
     }
 

@@ -52,6 +52,7 @@ class LearningRequest(BaseModel):
     topic: str
     hours_per_week: int
     preferred_format: str
+    userId: str
 
 class Resource(BaseModel):
     title: str
@@ -66,6 +67,11 @@ class LearningModule(BaseModel):
 class LearningPlanResponse(BaseModel):
     plan_title: str
     modules: list[LearningModule]
+
+class SavePlanRequest(BaseModel):
+    userId: str
+    planTitle: str
+    modules: list[dict]
 
 # --- Helper function for our advanced agentic workflow ---
 def process_single_sub_topic(args):
@@ -154,48 +160,43 @@ def generate_plan(request: LearningRequest):
 
         tasks = [(request.topic, i + 1, sub_topic) for i, sub_topic in enumerate(sub_topics)]
         
-        generated_modules = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            results = executor.map(process_single_sub_topic, tasks)
-            generated_modules = list(results)
+            generated_modules = list(executor.map(process_single_sub_topic, tasks))
         
         generated_modules.sort(key=lambda x: x.week)
 
-        # 1. Create the response object FIRST
-        response_data = LearningPlanResponse(
+        return LearningPlanResponse(
             plan_title=f"Your Curated Plan for {request.topic}",
             modules=generated_modules
         )
-
-        # 2. NOW, attempt to save the plan to the database
-        try:
-            modules_dict = [module.model_dump() for module in response_data.modules]
-            document_data = {
-                "planTitle": response_data.plan_title,
-                "modules": json.dumps(modules_dict),
-                "userId": "anonymous_user" 
-            }
-            
-            appwrite_databases.create_document(
-                database_id=appwrite_database_id,
-                collection_id=PLANS_COLLECTION_ID,
-                document_id=ID.unique(),
-                data=document_data
-            )
-            print("Successfully saved plan to Appwrite Database.")
-        except Exception as db_error:
-            # If saving fails, we still want to return the plan to the user. We just print a warning.
-            print(f"DATABASE WARNING: Failed to save plan. {db_error}")
-
-        # 3. FINALLY, return the data to the Android app.
-        return response_data
-
     except Exception as e:
-        print(f"A top-level error occurred: {e}")
-        return LearningPlanResponse(
-            plan_title=f"Error generating plan for {request.topic}",
-            modules=[]
+        print(f"A top-level error occurred during generation: {e}")
+        return LearningPlanResponse(plan_title="Error Generating Plan", modules=[]
         )
+@app.post("/api/save-plan")
+def save_plan(request: SavePlanRequest):
+    
+    print(f"Received SAVE request for user: {request.userId}")
+    try:
+        # THE FIX: We use `request.modules` which comes directly from the app.
+        # The `response_data` variable does not exist here.
+        document_data = {
+            "planTitle": request.planTitle,
+            "modules": json.dumps(request.modules),
+            "userId": request.userId
+        }
+        
+        appwrite_databases.create_document(
+            database_id=appwrite_database_id,
+            collection_id=PLANS_COLLECTION_ID,
+            document_id=ID.unique(),
+            data=document_data
+        )
+        print("Successfully saved plan to Appwrite Database.")
+        return {"success": True}
+    except Exception as db_error:
+        print(f"DATABASE ERROR: Failed to save plan. {db_error}")
+        return {"success": False, "error": str(db_error)}
 
 @app.get("/")
 def read_root():

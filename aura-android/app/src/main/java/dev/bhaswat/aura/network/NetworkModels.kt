@@ -9,7 +9,9 @@ data class LearningRequest(
     @SerializedName("hours_per_week")
     val hoursPerWeek: Int,
     @SerializedName("preferred_format")
-    val preferredFormat: String
+    val preferredFormat: String,
+    @SerializedName("userId")
+    val userId: String
 )
 
 // The classes below match the LearningPlanResponse Pydantic model.
@@ -36,4 +38,21 @@ data class Resource(
     val url: String,
     @SerializedName("type")
     val type: String
+)
+data class SavePlanRequest(
+    @SerializedName("userId")
+    val userId: String,
+    @SerializedName("planTitle")
+    val planTitle: String,
+    // We send the modules as a list of simple maps.
+    @SerializedName("modules")
+    val modules: List<Map<String, Any>>
+)
+
+// --- THIS IS THE NEW DATA CLASS FOR THE SAVE RESPONSE ---
+data class SavePlanResponse(
+    @SerializedName("success")
+    val success: Boolean,
+    @SerializedName("error")
+    val error: String? = null
 )

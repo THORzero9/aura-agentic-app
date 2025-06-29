@@ -26,23 +26,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" />
-                <data android:host="bhaswat.social" />
-                <data android:path="/verify" />
-            </intent-filter>
         </activity>
         <activity
             android:name="io.appwrite.views.CallbackActivity"
             android:exported="true">
             <intent-filter android:label="android_web_auth">
                 <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" /> <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="appwrite-callback-aura-agentic-app" />
-        </intent-filter>
+            </intent-filter>
         </activity>
     </application>
 
