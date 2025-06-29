@@ -1,6 +1,7 @@
 import os
 import concurrent.futures
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 import google.generativeai as genai
@@ -14,6 +15,22 @@ from appwrite.id import ID
 
 # --- App Initialization & API Configuration ---
 app = FastAPI()
+
+# --- CORS Configuration ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173", 
+        "https://aura-agentic-app.netlify.app",
+        "https://*.netlify.app",
+        "https://*.vercel.app"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 #load_dotenv()
 
 # Configure Gemini
