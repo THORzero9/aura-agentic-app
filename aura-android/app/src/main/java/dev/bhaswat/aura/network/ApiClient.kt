@@ -8,7 +8,11 @@ import java.util.concurrent.TimeUnit
 object ApiClient {
 
     // IMPORTANT: Replace this with your computer's local Wi-Fi IP address
-    private const val BASE_URL = "http://192.168.1.4:8000/"
+
+    //private const val BASE_URL = "http://192.168.1.4:8000/"
+
+    //for production
+    private const val BASE_URL ="https://cloud.appwrite.io/v1/functions/6860881500369301dd2e/executions/"
 
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(60, TimeUnit.SECONDS)
