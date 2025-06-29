@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import uvicorn
 import google.generativeai as genai
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 from tavily import TavilyClient
 import json
 import time
@@ -14,12 +14,12 @@ from appwrite.id import ID
 
 # --- App Initialization & API Configuration ---
 app = FastAPI()
-load_dotenv()
+#load_dotenv()
 
 # Configure Gemini
 gemini_api_key = os.getenv("GOOGLE_API_KEY")
 if not gemini_api_key:
-    raise ValueError("GOOGLE_API_KEY not found in .env file")
+    raise ValueError("GOOGLE_API_KEY not found in environment variables")
 genai.configure(api_key=gemini_api_key)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
@@ -36,7 +36,7 @@ appwrite_api_key = os.getenv("APPWRITE_API_KEY")
 appwrite_database_id = os.getenv("APPWRITE_DATABASE_ID")
 
 if not all([appwrite_project_id, appwrite_api_key, appwrite_database_id]):
-    raise ValueError("Appwrite configuration missing from .env file")
+    raise ValueError("Appwrite configuration missing from environment variables")
 
 (appwrite_client
   .set_endpoint("https://cloud.appwrite.io/v1")
