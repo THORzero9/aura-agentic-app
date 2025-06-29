@@ -39,25 +39,33 @@ const HomeScreen: React.FC = () => {
   const handleCreatePlan = async () => {
     if (!user || !homeState.topic.trim()) return;
 
+    // Set loading state immediately
     setHomeState(prev => ({ ...prev, isLoading: true }));
 
-    const request = {
-      topic: homeState.topic,
-      hours_per_week: homeState.hours,
-      preferred_format: homeState.selectedStyle,
-      userId: user.$id
-    };
+    try {
+      const request = {
+        topic: homeState.topic,
+        hours_per_week: homeState.hours,
+        preferred_format: homeState.selectedStyle,
+        userId: user.$id
+      };
 
-    const plan = await generatePlan(request);
-    
-    setHomeState(prev => ({ ...prev, isLoading: false }));
-
-    if (plan) {
-      setCurrentPlan(plan);
-      navigate('/plan');
-    } else {
-      // Handle error - could show a toast or error message
+      console.log('Starting plan generation...'); // Debug log
+      const plan = await generatePlan(request);
+      console.log('Plan generation completed:', plan); // Debug log
+      
+      if (plan) {
+        setCurrentPlan(plan);
+        navigate('/plan');
+      } else {
+        alert('Failed to generate plan. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error generating plan:', error);
       alert('Failed to generate plan. Please try again.');
+    } finally {
+      // Always clear loading state
+      setHomeState(prev => ({ ...prev, isLoading: false }));
     }
   };
 
@@ -95,10 +103,30 @@ const HomeScreen: React.FC = () => {
 
       {/* Loading Overlay */}
       {(homeState.isLoading || isLoading) && (
-        <div className="fixed inset-0 bg-primary-text bg-opacity-90 flex items-center justify-center z-40">
+        <div 
+          className="fixed inset-0 flex items-center justify-center"
+          style={{
+            backgroundColor: 'rgba(51, 58, 68, 0.95)',
+            zIndex: 9999,
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0
+          }}
+        >
           <div className="text-center">
-            <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <div 
+              className="mx-auto mb-4 animate-spin"
+              style={{
+                width: '64px',
+                height: '64px',
+                border: '4px solid white',
+                borderTop: '4px solid transparent',
+                borderRadius: '50%'
+              }}
+            ></div>
             <p className="text-white text-lg font-medium">Creating your personalized plan...</p>
+            <p className="text-white text-sm opacity-75 mt-2">This may take 30-60 seconds...</p>
           </div>
         </div>
       )}

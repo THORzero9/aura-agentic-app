@@ -1,5 +1,6 @@
 package dev.bhaswat.aura.ui.screens.home
 
+import android.R.attr.enabled
 import androidx.compose.animation.AnimatedVisibility
 import dev.bhaswat.aura.R
 import androidx.compose.animation.fadeIn
@@ -96,36 +97,35 @@ fun HomeScreen(
             onNavigateToPlan()
         }
     }
-        if (showLogoutDialog) {
-            AlertDialog(
-                onDismissRequest = { showLogoutDialog = false } ,
-                title = { Text("Confirm Logout") } ,
-                text = { Text("Are you sure you want to log out?") } ,
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            showLogoutDialog = false
-                            onLogout() // Call the navigation callback to perform logout
-                        }
-                    ) {
-                        Text("Logout")
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false } ,
+            title = { Text("Confirm Logout") } ,
+            text = { Text("Are you sure you want to log out?") } ,
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        onLogout() // Call the navigation callback to perform logout
                     }
-                } ,
-                dismissButton = {
-                    TextButton(onClick = { showLogoutDialog = false }) {
-                        Text("Cancel")
-                    }
+                ) {
+                    Text("Logout")
                 }
-            )
-        }
-
+            } ,
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
 
     // Main UI Box - no Scaffold here, which is correct
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppBackground),
+            .background(AppBackground) ,
         contentAlignment = Alignment.Center
     ) {
         // The main white card
@@ -141,7 +141,7 @@ fun HomeScreen(
             // Top Bar: "Aura" and Help Icon
             Row(
                 modifier = Modifier.fillMaxWidth() ,
-                horizontalArrangement = Arrangement.End ,
+                //horizontalArrangement = Arrangement.End ,
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
@@ -150,19 +150,21 @@ fun HomeScreen(
                     style = MaterialTheme.typography.titleMedium ,
                     fontWeight = FontWeight.Bold ,
                     color = PrimaryText ,
-                    modifier = Modifier.weight(1f).wrapContentWidth(Alignment.CenterHorizontally)
+                    //modifier = Modifier.weight(1f).wrapContentWidth(Alignment.CenterHorizontally)
                 )
+                Spacer(modifier = Modifier.weight(1f))
+
                 IconButton(onClick = onNavigateToSavedPlans) {
                     Icon(
-                        imageVector = Icons.Default.Bookmarks, // The new icon
-                        contentDescription = "Saved Plans",
+                        imageVector = Icons.Default.Bookmarks , // The new icon
+                        contentDescription = "Saved Plans" ,
                         tint = PrimaryText
                     )
                 }
-                IconButton(onClick = { showLogoutDialog = true}) {
+                IconButton(onClick = { showLogoutDialog = true }) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                        contentDescription = "Logout",
+                        imageVector = Icons.AutoMirrored.Filled.ExitToApp ,
+                        contentDescription = "Logout" ,
                         tint = PrimaryText
                     )
                 }
@@ -256,21 +258,21 @@ fun HomeScreen(
 
             // The Button is unchanged and correct
             Button(
-                onClick = homeViewModel::onCreatePlanClick,
-                enabled = uiState.topic.isNotBlank(),
+                onClick = homeViewModel::onCreatePlanClick ,
+                enabled = uiState.topic.isNotBlank() ,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
+                    .height(56.dp) ,
+                shape = RoundedCornerShape(16.dp) ,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = AccentBlue,
+                    containerColor = AccentBlue ,
                     disabledContainerColor = SliderTrack
                 )
             ) {
                 Text(
-                    text = "Create my plan",
-                    color = PrimaryText,
-                    fontWeight = FontWeight.Bold,
+                    text = "Create my plan" ,
+                    color = PrimaryText ,
+                    fontWeight = FontWeight.Bold ,
                     fontSize = 16.sp
                 )
             }
@@ -278,26 +280,28 @@ fun HomeScreen(
 
         // The loading overlay is unchanged and correct
         AnimatedVisibility(
-            visible = uiState.isLoading,
-            enter = fadeIn(),
+            visible = uiState.isLoading ,
+            enter = fadeIn() ,
             exit = fadeOut()
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f)),
+                    .background(PrimaryText.copy(alpha = 1.0f))
+                    .clickable(enabled = false , onClick = {}) ,
                 contentAlignment = Alignment.Center
             ) {
                 val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ai_loader))
                 LottieAnimation(
-                    composition = composition,
-                    iterations = LottieConstants.IterateForever,
-                    modifier = Modifier.size(200.dp)
+                    composition = composition ,
+                    iterations = LottieConstants.IterateForever ,
+                    modifier = Modifier.size(250.dp)
                 )
             }
         }
     }
 }
+/// end of the homescreen
 
 // Helper composable for the styled chips
 @Composable
@@ -322,15 +326,5 @@ fun StyleChip(label: String, isSelected: Boolean, onSelected: () -> Unit) {
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             fontSize = 14.sp
         )
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    AuraTheme {Surface(modifier = Modifier.fillMaxSize()) {
-        Text(text = "HomeScreen Preview")
-    }
     }
 }

@@ -13,6 +13,7 @@ lottieCompose = "6.6.7"
 materialIconsExtended = "1.7.8"
 navigationCompose = "2.9.0"
 sdkForAndroid = "8.1.0"
+splashscreen = "1.0.1"
 
 
 [libraries]
@@ -38,6 +39,7 @@ lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "converterGson" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 sdk-for1-android = { module = "io.appwrite:sdk-for-android", version.ref = "sdkForAndroid" }
+androidx-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
 
 
 [plugins]

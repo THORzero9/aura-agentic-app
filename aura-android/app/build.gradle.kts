@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.lottie.compose)
+    implementation(libs.androidx.splashscreen)
     // Retrofit for networking
     implementation(libs.retrofit)
     // Gson converter for JSON serialization
