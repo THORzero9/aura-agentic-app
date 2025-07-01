@@ -89,4 +89,4 @@ Aura is a full-stack application built with a modern, decoupled architecture.
 
 ## 🎬 Demo Video
 
-[Link to our 3-minute demo video] ```
+https://youtu.be/qxn4Sp8i0as?si=Xiy0qMDLqaH4YPQ6
