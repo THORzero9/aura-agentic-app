@@ -10,6 +10,7 @@ object ApiClient {
     // IMPORTANT: Replace this with your computer's local Wi-Fi IP address
 
     //private const val BASE_URL = "http://192.168.1.4:8000/"
+
     //for production
     private const val BASE_URL ="https://aura-agentic-app-646612637107.asia-south1.run.app"
 
