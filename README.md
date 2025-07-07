@@ -1,6 +1,7 @@
 # Aura - Your Personal AI Learning Guide
 
-![Aura App Logo] **Aura is an intelligent, full-stack mobile application designed to combat information overload and create personalized, high-quality learning paths for any topic.**
+<a href="https://ibb.co/8nF638jk"><img src="https://i.ibb.co/8nF638jk/Aura-App-Logo.png" alt="Aura-App-Logo" border="0"></a> <br>
+**Aura is an intelligent, full-stack mobile application designed to combat information overload and create personalized, high-quality learning paths for any topic.**
 
 ## The Problem
 
