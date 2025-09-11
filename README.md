@@ -20,7 +20,7 @@ Aura acts as your personal AI mentor. Simply tell the app what you want to learn
 * **Secure User Authentication:** Full email/password and Google Sign-In support, powered by **Appwrite**. Includes a robust OTP email verification flow.
 * **Save & View Plans:** Users can save their favorite generated plans to their personal account and view them anytime.
 * **Polished Native Experience:** A beautiful, responsive, and user-friendly native Android application built with the latest Jetpack Compose standards.
-* **(Bonus) Web Frontend:** A fully functional web app built with React, deployed on Netlify, for universal accessibility.
+* **Web Frontend:** A fully functional web app built with React, deployed on Netlify, for universal accessibility.
 
 ---
 
@@ -34,7 +34,7 @@ Aura is a full-stack application built with a modern, decoupled architecture.
 * **UI:** Jetpack Compose
 * **Architecture:** MVVM (Model-View-ViewModel) with a Repository Pattern
 * **Networking:** Retrofit
-* **Dependencies:** Hilt (for Dependency Injection), Lottie (for animations), Jetpack Navigation
+* **Dependencies:** Lottie (for animations), Jetpack Navigation
 
 ### **Frontend (Web)**
 
@@ -47,15 +47,27 @@ Aura is a full-stack application built with a modern, decoupled architecture.
 * **Deployment:** Google Cloud Run for scalability and management.
 * **AI Orchestration:**
     * **Google Generative AI (Gemini 2.5 Flash):** Used for all reasoning tasks, including deconstructing topics and curating resources.
-    * **Tavily Search API (Sponsor Tech):** Used for all web searches to find high-quality, relevant learning materials.
+    * **Tavily Search API :** Used for all web searches to find high-quality, relevant learning materials.
 
 ### **Backend-as-a-Service (BaaS)**
 
-* **Appwrite (Sponsor Tech):**
+* **Appwrite :**
     * **Appwrite Auth:** Manages all user accounts, including Email/Password, Google Sign-In, and OTP verification.
     * **Appwrite Databases:** Provides the persistent cloud database for storing all user-saved learning plans.
 
 ---
+
+### 🧠 How It Works: The AI Agent
+
+The core of Aura is its intelligent agent, which follows a four-step process to create a high-quality learning plan:
+
+1.  **Deconstruction**: The user's topic is sent to a Generative AI model (Gemini) to be broken down into four logical, weekly sub-topics.
+2.  **Search**: For each sub-topic, the Tavily search API is used to find relevant, high-quality learning resources like articles and videos.
+3.  **Self-Correction**: An AI-powered sanity check evaluates the initial search results. If they aren't relevant for a beginner, the agent refines and re-runs the search query.
+4.  **Curation**: The final, validated search results are passed to the AI model one last time to select the top 2-3 resources for each week and format them into a clean JSON response.
+
+This agentic approach ensures the generated plans are more relevant and higher quality than a single, simple API call.
+
 
 ## ⚙️ Setup and Installation
 
