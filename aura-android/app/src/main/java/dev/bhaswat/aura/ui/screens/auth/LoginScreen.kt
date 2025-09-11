@@ -2,6 +2,8 @@ package dev.bhaswat.aura.ui.screens.auth
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,8 +19,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -30,6 +32,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -37,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.bhaswat.aura.ui.theme.PrimaryText
+import dev.bhaswat.aura.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -152,12 +158,19 @@ fun LoginScreen(
                 )
             }
             Spacer(modifier = Modifier.height(24.dp))
-            OutlinedButton(
+            IconButton(
                 onClick = { authViewModel.signInWithGoogle(context as ComponentActivity) },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                shape = RoundedCornerShape(12.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp) // You can adjust the height as needed
+                    .border(width = 1.dp, color = Color.LightGray, shape = RoundedCornerShape(12.dp))
             ) {
-                Text("Sign in with Google", color = PrimaryText)
+                Image(
+                    painter = painterResource(R.drawable.ic_google_signin),
+                    contentDescription = "Sign in with Google",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit
+                )
             }
         }
 
