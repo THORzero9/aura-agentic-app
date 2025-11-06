@@ -78,7 +78,7 @@ def initialize_external_clients_if_needed():
     # Configure and initialize clients now that we know keys exist.
     print("Initializing external clients...")
     genai.configure(api_key=required_vars["GOOGLE_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     tavily_client = TavilyClient(api_key=required_vars["TAVILY_API_KEY"])
 
     appwrite_client = Client()
@@ -256,4 +256,5 @@ def read_root():
 
 # This block is for local development only and is not used by the Docker container.
 if __name__ == "__main__":
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
